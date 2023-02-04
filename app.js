@@ -2,7 +2,8 @@ require("dotenv").config()
 const express = require('express');
 const expressLayouts = require('express-ejs-layouts')
 const app = express(); 
-
+const bodyParser = require('body-parser');
+app.use(bodyParser.urlencoded({ extended: true }));
 const mongoose = require('mongoose')
 mongoose.set('strictQuery', true);
 const db = process.env.DATABASE_URL;

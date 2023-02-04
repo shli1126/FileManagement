@@ -1,9 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-router.get('/login', (req, res) => res.render('login'));
+const File = require('../models/File')
 
+const multer = require("multer")
+const upload = multer({ dest: "uploads" })
+const bodyParser = require('body-parser');
+router.use(bodyParser.urlencoded({ extended: true }));
+
+
+router.get('/login', (req, res) => res.render('login'));
 router.get('/register', (req, res) => res.render('register'));
+router.get('/file', (req, res) => res.render('file'));
+router.get('/upload', (req, res) => res.render('upload'));
+router.get('/download', (req, res) => res.render('download'));
+
 
 router.post('/register', (req, res) => {
     const { name, email, password } = req.body;
@@ -36,7 +47,6 @@ router.post('/register', (req, res) => {
 })
 
 router.post('/login', (req, res) => {
-  
     User.findOne({name: req.body.name}, (err, data) => {
         if (err) {
             console.log(err);
@@ -46,7 +56,7 @@ router.post('/login', (req, res) => {
         }
         else {
             if (data.password == req.body.password) {
-                res.send('login successfully')
+                res.redirect('/users/file')
             }
             else {
                 res.redirect('/users/login')
@@ -55,5 +65,36 @@ router.post('/login', (req, res) => {
     })
 })
 
+
+router.post("/upload", upload.single("file"), async (req, res) => {
+    console.log(req.body)
+    const fileData = {
+        path: req.file.path,
+        fileName: req.file.originalname
+    }
+    const file = await File.create(fileData)
+    console.log(file._id)
+    
+    res.send(`<h1>Use this file id to download: <h2 style="color:blue">${file._id}</h2></h1>`)
+})  
+    
+
+router.post("/download", async (req, res) => {
+    const fileId = req.body.fileId
+    if (fileId.length != 24) {
+        res.send(`<h2 style="color:red">Wrong id</h2>`)
+        return
+    }
+    else {
+        const file = await File.findById(fileId)
+        if (file != null) {
+            await file.save()
+            res.download(file.path, file.fileName)
+        }
+        else {
+            res.send(`<h2 style="color:red">Wrong id</h2>`)
+        }
+    }
+})
 
 module.exports = router; 
