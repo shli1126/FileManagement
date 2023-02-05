@@ -16,7 +16,12 @@ const UserSchema = new mongoose.Schema({
     date: {
         type: Date,
         default: Date.now
-    }
+    },
+    //add file to each user
+    fileIDlogs: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'File'
+    }],
 });
 
 const User = mongoose.model('User', UserSchema);
