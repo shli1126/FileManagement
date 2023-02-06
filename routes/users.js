@@ -16,6 +16,8 @@ router.get('/upload', (req, res) => res.render('upload'));
 router.get('/download', (req, res) => res.render('download'));
 
 var currentUsername;
+var currentUserDic = {};
+
 
 router.post('/register', (req, res) => {
     const { name, email, password } = req.body;
@@ -73,9 +75,10 @@ router.post('/login', (req, res) => {
                     for (let j = 0; j < fileIDs.length; j++) {
                         let fileObject = await File.findById(fileIDs[j])
                         let name = fileObject['fileName']
+                        currentUserDic[name] = fileIDs[j];
                         filesNames.push(name);
                     }
-                    res.render("file", { userFileList: filesNames, userName: req.body.name })
+                    res.render("file", { userFileList: filesNames, userName: currentUsername })
                 })
             }
             else {
@@ -84,7 +87,6 @@ router.post('/login', (req, res) => {
         }
     })
 })
-
 
 //upload, submite current user's file
 router.post("/file/upload", upload.single("file"), async (req, res) => {
@@ -99,13 +101,13 @@ router.post("/file/upload", upload.single("file"), async (req, res) => {
           console.log(err);
         }
     });
-    res.send(file._id)
+    res.send('Uploaded successfully')
 })  
     
 
-// dowload, download the specific file
+// dowload, download the specificed file
 router.post("/file/download", async (req, res) => {
-    const fileId = req.body.fileId
+    const fileId = currentUserDic[req.body.fileName];
     if (fileId.length != 24) {
         res.send(`<h2 style="color:red">Wrong id</h2>`)
         return
