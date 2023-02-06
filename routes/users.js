@@ -15,6 +15,7 @@ router.get('/file', (req, res) => res.render('file'));
 router.get('/upload', (req, res) => res.render('upload'));
 router.get('/download', (req, res) => res.render('download'));
 
+var currentUsername;
 
 router.post('/register', (req, res) => {
     const { name, email, password } = req.body;
@@ -48,6 +49,7 @@ router.post('/register', (req, res) => {
 
 //***try to display all current user's file in the file.ejs page immediately after log in***
 router.post('/login', (req, res) => {
+    currentUsername = req.body.name;
     User.findOne({name: req.body.name}, (err, data) => {
         if (err) {
             console.log(err);
@@ -85,15 +87,13 @@ router.post('/login', (req, res) => {
 
 
 //upload, submite current user's file
-router.post("/upload", upload.single("file"), async (req, res) => {
-
+router.post("/file/upload", upload.single("file"), async (req, res) => {
     const fileData = {
         path: req.file.path,
         fileName: req.file.originalname
     }
     const file = await File.create(fileData)
-    
-    User.findOneAndUpdate({ name: req.body.name }, 
+    User.findOneAndUpdate({ name: currentUsername }, 
         { $push: {fileIDlogs: file._id} }, (err, data) => {
         if (err){
           console.log(err);
@@ -103,8 +103,8 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 })  
     
 
-
-router.post("/download", async (req, res) => {
+// dowload, download the specific file
+router.post("/file/download", async (req, res) => {
     const fileId = req.body.fileId
     if (fileId.length != 24) {
         res.send(`<h2 style="color:red">Wrong id</h2>`)

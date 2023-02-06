@@ -23,9 +23,18 @@
         <% } %>
     </ur>
     <hr>
-    <div class="d-grid gap-2">
-        <a href="./upload" class="btn btn-secondary btn-lg">Upload file</a>
-        <a href="./download" class="btn btn-secondary btn-lg">Download file</a>
-    </div>
+    <h2>Upload a file: </h2>
+    <form action="/users/file/upload" method="post" enctype="multipart/form-data">
+        <label for="file">File:</label>
+        <input type="file" id="file" name="file" required />
+        <button type="submit">Upload</button>
+    </form>
+    <br>
+    <h2>Download a file: </h2>
+    <form action="/users/file/download" method="post">
+        <label for="text">File id:</label>
+        <input type="text" name="fileId" required />
+        <input type="submit" />
+    </form>
 </body>
 </html>
