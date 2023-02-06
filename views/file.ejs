@@ -10,6 +10,19 @@
     crossorigin="anonymous">
 </head>
 <body>
+    <h1><%= `Welcome ${userName}` %></h1>
+    <hr>
+    <h2>You have the following files: </h2>
+    <ur>
+        <% if (userFileList.length > 0) { %>
+            <% for (let i = 0; i < userFileList.length; i++) { %>
+                <li><%=userFileList[i]%></li>
+            <% } %>
+        <% } else { %>
+            <p>Your don't have any file</p>
+        <% } %>
+    </ur>
+    <hr>
     <div class="d-grid gap-2">
         <a href="./upload" class="btn btn-secondary btn-lg">Upload file</a>
         <a href="./download" class="btn btn-secondary btn-lg">Download file</a>

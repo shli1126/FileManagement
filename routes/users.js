@@ -7,6 +7,7 @@ const multer = require("multer")
 const upload = multer({ dest: "uploads" })
 const bodyParser = require('body-parser');
 router.use(bodyParser.urlencoded({ extended: true }));
+//router.set('view engine', 'ejs');
 
 router.get('/login', (req, res) => res.render('login'));
 router.get('/register', (req, res) => res.render('register'));
@@ -22,7 +23,6 @@ router.post('/register', (req, res) => {
         email: email,
         password: password
     })
-    
     User.findOne({name: req.body.name}, (err, data) => {
         if (err) {
             console.log(err);
@@ -45,6 +45,8 @@ router.post('/register', (req, res) => {
     })
 })
 
+
+//***try to display all current user's file in the file.ejs page immediately after log in***
 router.post('/login', (req, res) => {
     User.findOne({name: req.body.name}, (err, data) => {
         if (err) {
@@ -55,7 +57,24 @@ router.post('/login', (req, res) => {
         }
         else {
             if (data.password == req.body.password) {
-                res.redirect('/users/file')
+                var filesNames = []
+                var fileIDs = []
+                User.find( {name: req.body.name }, async (err, result) => {
+                    if (err) {
+                        console.log(err)
+                    }
+                    let user = result[0];
+                    let objectIdList = user['fileIDlogs']
+                    for (let i = 0; i < objectIdList.length; i++) {
+                        fileIDs.push(objectIdList[i].toString())
+                    }
+                    for (let j = 0; j < fileIDs.length; j++) {
+                        let fileObject = await File.findById(fileIDs[j])
+                        let name = fileObject['fileName']
+                        filesNames.push(name);
+                    }
+                    res.render("file", { userFileList: filesNames, userName: req.body.name })
+                })
             }
             else {
                 res.redirect('/users/login')
@@ -64,6 +83,8 @@ router.post('/login', (req, res) => {
     })
 })
 
+
+//upload, submite current user's file
 router.post("/upload", upload.single("file"), async (req, res) => {
 
     const fileData = {
@@ -77,10 +98,11 @@ router.post("/upload", upload.single("file"), async (req, res) => {
         if (err){
           console.log(err);
         }
-      });
+    });
     res.send(file._id)
 })  
     
+
 
 router.post("/download", async (req, res) => {
     const fileId = req.body.fileId
