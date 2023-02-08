@@ -34,7 +34,14 @@
     <form action="/users/file/download" method="post">
         <label for="text">File name:</label>
         <input type="text" name="fileName" required />
-        <input type="submit" />
+        <button type="submit">Download</button>
     </form>
+    <h2>Delete a file: </h2>
+    <form action="/users/file/delete" method="post">
+        <label for="text">File name:</label>
+        <input type="text" name="fileName" required />
+        <button type="submit">Delete</button>
+    </form>
+
 </body>
 </html>

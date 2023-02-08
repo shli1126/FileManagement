@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const File = require('../models/File');
 
+const fs = require('fs');
 const multer = require("multer")
 const upload = multer({ dest: "uploads" })
 const bodyParser = require('body-parser');
@@ -17,7 +18,7 @@ router.get('/download', (req, res) => res.render('download'));
 
 var currentUsername;
 var currentUserDic = {};
-
+var ObjectId = require('mongodb').ObjectID;
 
 router.post('/register', (req, res) => {
     const { name, email, password } = req.body;
@@ -61,8 +62,8 @@ router.post('/login', (req, res) => {
         }
         else {
             if (data.password == req.body.password) {
-                var filesNames = []
-                var fileIDs = []
+                let filesNames = []
+                let fileIDs = []
                 User.find( {name: req.body.name }, async (err, result) => {
                     if (err) {
                         console.log(err)
@@ -107,6 +108,7 @@ router.post("/file/upload", upload.single("file"), async (req, res) => {
 
 // dowload, download the specificed file
 router.post("/file/download", async (req, res) => {
+    console.log(currentUserDic)
     const fileId = currentUserDic[req.body.fileName];
     if (fileId.length != 24) {
         res.send(`<h2 style="color:red">Wrong id</h2>`)
@@ -122,5 +124,52 @@ router.post("/file/download", async (req, res) => {
     }
     
 })
+
+// delete a file from the user's filelogs, delete a file from the file database
+router.post("/file/delete", (req, res) => {
+    const fileId = currentUserDic[req.body.fileName];
+    // File.find({ "_id" : fileId }, (err, data) => {
+    //     if (err) {
+    //         console.log(err);
+    //     }
+    //     console.log(data)
+    // })
+    File.deleteOne({ "_id" : fileId }, (err, data) => {
+        if (err) {
+            console.log(err);
+        }
+        console.log(data)
+        if (data.deletedCount == 0) {
+            console.log("No such file")
+        }
+        else {
+            User.find( {name: currentUsername }, async (err, result) => {
+                if (err) {
+                    console.log(err)
+                }
+                let fileIDs = []
+                let user = result[0];
+                let objectIdList = user['fileIDlogs']
+                let updatedobjectIdList = []
+                for (let i = 0; i < objectIdList.length; i++) {
+                    fileIDs.push(objectIdList[i].toString())
+                }
+                for(let i = 0; i < fileIDs.length; i++){ 
+                    if (fileIDs[i] === fileId) { 
+                        fileIDs.splice(i, 1); 
+                    }
+                }
+                for(let i = 0; i < fileIDs.length; i++){ 
+                    updatedobjectIdList.push(new ObjectId(fileIDs[i]))
+                }
+                await User.updateOne({ name: currentUsername },{$set: {'fileIDlogs':  updatedobjectIdList }})
+                res.send("Deleted successfully")
+            })
+        }
+    })
+})
+
+
+
 
 module.exports = router; 
