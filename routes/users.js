@@ -128,19 +128,30 @@ router.post("/file/download", async (req, res) => {
 // delete a file from the user's filelogs, delete a file from the file database
 router.post("/file/delete", (req, res) => {
     const fileId = currentUserDic[req.body.fileName];
-    // File.find({ "_id" : fileId }, (err, data) => {
-    //     if (err) {
-    //         console.log(err);
-    //     }
-    //     console.log(data)
-    // })
+    File.findOne({ "_id" : fileId }, (err, data) => {
+        if (err) {
+            console.log(err);
+        }
+        if (data.length == 0) {
+            res.send("No such file")
+            return
+        }
+        else {
+            console.log(data)
+            fs.unlink(data.path, (err) => {
+                if (err) {
+                    console.log(err)
+                }
+                console.log("Delete from dir");
+            });
+        }
+    })
     File.deleteOne({ "_id" : fileId }, (err, data) => {
         if (err) {
             console.log(err);
         }
-        console.log(data)
         if (data.deletedCount == 0) {
-            console.log("No such file")
+            console.log("No such file after using find to check")
         }
         else {
             User.find( {name: currentUsername }, async (err, result) => {
