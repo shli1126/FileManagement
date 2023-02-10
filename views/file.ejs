@@ -13,21 +13,48 @@
     <h1><%= `Welcome ${userName}` %></h1>
     <hr>
     <h2>You have the following files: </h2>
-    <ur>
-        <% if (userFileList.length > 0) { %>
-            <% for (let i = 0; i < userFileList.length; i++) { %>
-                <li><%=userFileList[i]%></li>
-            <% } %>
-        <% } else { %>
-            <p>Your don't have any file</p>
+
+  
+    <% if (userFileListName.length > 0) { %>
+        <% let typeDic = {} %>
+        <% for (let i = 0; i < userFileListType.length; i++) {%>
+            <% typeDic[userFileListType[i]] = [] %>
         <% } %>
-    </ur>
+        <% for (let j = 0; j < userFileListName.length; j++) {%>
+            <% let currType = userFileListName[j].split('.').pop() %>
+            <% typeDic[currType].push(userFileListName[j].concat("___Size: ", userFileListSize[j].toString(),
+            "MB", "___Uploaded Date: ", userFileListDate[j]))%>
+        <% } %>
+        <% for (let k in typeDic) {%>
+            <h4><%=k%>:</h4>
+            <ol>
+                <% for (let f = 0; f < typeDic[k].length; f++) { %>
+                    <% console.log(typeDic[k][f])%>
+                    <li><b><%= typeDic[k][f] %></b></li>
+                <% } %>
+            </ol>
+        <% } %>
+    <% } else { %>
+        <p>Your don't have any file</p>
+    <% } %>
+
     <hr>
     <h2>Upload a file: </h2>
     <form action="/users/file/upload" method="post" enctype="multipart/form-data">
         <label for="file">File:</label>
-        <input type="file" id="file" name="file" required />
+        <input type="file" id="file" name="file" onchange="loadFile(event)" required/>
         <button type="submit">Upload</button>
+        <label for="output">Image preview:</label>
+        <img id="output" width="500" height="300"/>
+        <script>
+            var loadFile = function(event) {
+                var output = document.getElementById('output');
+                output.src = URL.createObjectURL(event.target.files[0]);
+                output.onload = function() {
+                URL.revokeObjectURL(output.src) 
+                }
+            };
+        </script>
     </form>
     <br>
     <h2>Download a file: </h2>

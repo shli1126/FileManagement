@@ -8,6 +8,10 @@ const FileSchema = new mongoose.Schema({
     fileName: {
         type: String,
         required: true
+    },
+    date: {
+        type: Date,
+        default: Date.now
     }
     //password: String
 })

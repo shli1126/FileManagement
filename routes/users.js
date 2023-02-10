@@ -12,13 +12,11 @@ router.use(bodyParser.urlencoded({ extended: true }));
 
 router.get('/login', (req, res) => res.render('login'));
 router.get('/register', (req, res) => res.render('register'));
-router.get('/file', (req, res) => res.render('file'));
-router.get('/upload', (req, res) => res.render('upload'));
-router.get('/download', (req, res) => res.render('download'));
 
 var currentUsername;
 var currentUserDic = {};
 var ObjectId = require('mongodb').ObjectID;
+
 
 router.post('/register', async (req, res) => {
     const { name, email, password } = req.body;
@@ -55,7 +53,7 @@ router.post('/register', async (req, res) => {
 
 
 //***try to display all current user's file in the file.ejs page immediately after log in***
-router.post('/login', (req, res) => {
+router.post('/login/file', (req, res) => {
     currentUsername = req.body.name;
     User.findOne({name: req.body.name}, async (err, data) => {
         if (err) {
@@ -67,7 +65,10 @@ router.post('/login', (req, res) => {
         else {
             if (await bcrypt.compare(req.body.password, data.password)) {
                 let filesNames = []
+                let fileDate = []
                 let fileIDs = []
+                let fileSize = []
+                let fileType = []
                 User.find( {name: req.body.name }, async (err, result) => {
                     if (err) {
                         console.log(err)
@@ -80,10 +81,28 @@ router.post('/login', (req, res) => {
                     for (let j = 0; j < fileIDs.length; j++) {
                         let fileObject = await File.findById(fileIDs[j])
                         let name = fileObject['fileName']
+                        let date = fileObject['date']
+                        let path = fileObject['path']
+                        let type = name.split('.').pop()
+                        let stats = fs.statSync(path);
+                        let fileSizeInBytes = stats.size;
+                        // Convert the file size to megabytes (optional)
+                        let fileSizeInMegabytes = fileSizeInBytes / (1024*1024);
                         currentUserDic[name] = fileIDs[j];
                         filesNames.push(name);
+                        fileDate.push(date)
+                        fileSize.push(Math.round(fileSizeInMegabytes * 100) / 100)
+                        if (!fileType.includes(type)) {
+                            fileType.push(type)
+                        }
                     }
-                    res.render("file", { userFileList: filesNames, userName: currentUsername })
+                    res.render("file", { userFileListName: filesNames, 
+                        userFileListDate: fileDate, 
+                        userName: currentUsername,
+                        userFileListSize: fileSize,
+                        userFileListType: fileType,
+
+                     })
                 })
             }
             else {
@@ -107,6 +126,7 @@ router.post("/file/upload", upload.single("file"), async (req, res) => {
         }
     });
     res.send('Uploaded successfully')
+    //res.redirect('back')
 })  
     
 
@@ -146,7 +166,7 @@ router.post("/file/delete", (req, res) => {
                 if (err) {
                     console.log(err)
                 }
-                console.log("Delete from dir");
+                //console.log("Delete from dir");
             });
         }
     })
