@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const File = require('../models/File');
-
+const bcrypt = require('bcrypt')
 const fs = require('fs');
 const multer = require("multer")
 const upload = multer({ dest: "uploads" })
@@ -20,13 +20,17 @@ var currentUsername;
 var currentUserDic = {};
 var ObjectId = require('mongodb').ObjectID;
 
-router.post('/register', (req, res) => {
+router.post('/register', async (req, res) => {
     const { name, email, password } = req.body;
+   
+    const hashedPassword = await bcrypt.hash(password, 10)
+    
     const newUser = new User({
         name: name,
         email: email,
-        password: password
+        password: hashedPassword
     })
+
     User.findOne({name: req.body.name}, (err, data) => {
         if (err) {
             console.log(err);
@@ -36,13 +40,13 @@ router.post('/register', (req, res) => {
                 if (err) {
                     console.log(err)
                 }
-                console.log(data)
+                //console.log(data)
                 console.log('new user')
                 res.redirect('/users/login')
             })
         }
         else {
-            console.log(data)
+            //console.log(data)
             console.log('name or email exist')
             res.redirect('/users/register')
         }
@@ -53,7 +57,7 @@ router.post('/register', (req, res) => {
 //***try to display all current user's file in the file.ejs page immediately after log in***
 router.post('/login', (req, res) => {
     currentUsername = req.body.name;
-    User.findOne({name: req.body.name}, (err, data) => {
+    User.findOne({name: req.body.name}, async (err, data) => {
         if (err) {
             console.log(err);
         }
@@ -61,7 +65,7 @@ router.post('/login', (req, res) => {
             res.redirect('/users/register')
         }
         else {
-            if (data.password == req.body.password) {
+            if (await bcrypt.compare(req.body.password, data.password)) {
                 let filesNames = []
                 let fileIDs = []
                 User.find( {name: req.body.name }, async (err, result) => {
@@ -108,7 +112,7 @@ router.post("/file/upload", upload.single("file"), async (req, res) => {
 
 // dowload, download the specificed file
 router.post("/file/download", async (req, res) => {
-    console.log(currentUserDic)
+    //console.log(currentUserDic)
     const fileId = currentUserDic[req.body.fileName];
     if (fileId.length != 24) {
         res.send(`<h2 style="color:red">Wrong id</h2>`)
@@ -137,7 +141,7 @@ router.post("/file/delete", (req, res) => {
             return
         }
         else {
-            console.log(data)
+            //console.log(data)
             fs.unlink(data.path, (err) => {
                 if (err) {
                     console.log(err)
